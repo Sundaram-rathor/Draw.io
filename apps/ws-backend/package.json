@@ -10,12 +10,14 @@
   "devDependencies": {
     "@repo/backend-common": "workspace:*",
     "@repo/typescript-config": "workspace:*"
+    
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@repo/DB":"workspace:*",
     "@types/jsonwebtoken": "^9.0.9",
     "@types/ws": "^8.18.0",
     "jsonwebtoken": "^9.0.2",

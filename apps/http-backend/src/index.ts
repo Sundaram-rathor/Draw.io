@@ -103,7 +103,7 @@ app.post("/create-room", UserMiddleware, async (req: Request, res: Response): Pr
         
     
         res.json({ 
-            message: `room with rooom id ${room.slug} is created`
+            message: `room with rooom id ${room.id} is created`
         });
     } catch (error) {
         console.log('room with this id already exists')
