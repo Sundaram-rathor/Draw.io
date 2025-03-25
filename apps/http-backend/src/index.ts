@@ -116,6 +116,36 @@ app.post("/create-room", UserMiddleware, async (req: Request, res: Response): Pr
     
 });
 
+app.get('/chat/:roomId', UserMiddleware, async(req,res)=>{
+
+    //getting room id from params
+    const roomId = Number(req.params.roomId);
+
+    //retriving messages from respective room id
+    const message = await prismaClient.chat.findMany({
+        where:{
+            roomId:roomId
+        },
+        orderBy:{
+            id:'desc'
+        },
+        take:50
+    })
+
+    if(message == null){
+        res.json({
+            message:'no messages in this room'
+        })
+        return;
+    }
+
+
+    res.json({
+        message:'messages retrived',
+        data:message
+    })
+})
+
 app.listen(8000, () => {
     console.log("Server is running at port 8000");
 });
