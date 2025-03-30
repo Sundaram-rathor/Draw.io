@@ -122,6 +122,7 @@
             if(parsedData.type == 'chat'){
                 const roomId = room?.id
                 const message = parsedData.message
+                
 
                 await prismaClient.chat.create({ 
                     data:{
@@ -137,7 +138,8 @@
                         user.socket.send(JSON.stringify({
                             type:'chat',
                             slug:room.slug,
-                            message
+                            message,
+                            userId
                         }))
                     }
                 })
