@@ -7,7 +7,6 @@ import { useRouter } from 'next/navigation';
 const Page: React.FC = () => {
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
-  
   const router = useRouter()
 
   const containerStyle: React.CSSProperties = {
@@ -60,30 +59,31 @@ const Page: React.FC = () => {
     marginTop:'30px'
   };
 
-
-  const hitSignup = async ()=>{
+  const signIN = async ()=>{
 
     try {
-      const response = await axios.post(`${BACKEND_URL}/signup`,{
-      
+      const response = await axios.post(`${BACKEND_URL}/signin`,{
+     
         email,
         password
-      
+       
       })
-
-      if(response.data.success ==true){
-        alert('user signed up sucess')
-        router.push('/signin')
+      
+    
+      if(response.data.success){
+        localStorage.setItem('token',response.data.token)
+        alert('user signed in success')
+        router.push('/room')
+        
       }else{
-        alert('user not signed up')
+        alert('not able to signin')
       }
+    
+
 
     } catch (error) {
-      console.log('error in signing up', error)
+      console.log('error in signing in')
     }
-    
-
-    
 
     
   }
@@ -91,7 +91,7 @@ const Page: React.FC = () => {
   return (
     <div style={containerStyle}>
       <div style={formBoxStyle}>
-        <h2 style={titleStyle}>Sign Up</h2>
+        <h2 style={titleStyle}>Sign In</h2>
         <input
           type="email"
           placeholder="Email"
@@ -104,7 +104,7 @@ const Page: React.FC = () => {
           style={inputFieldStyle}
           onChange={(e) => setPassword(e.target.value)}
         />
-        <button style={buttonStyle} onClick={hitSignup}>Sign Up</button>
+        <button style={buttonStyle} onClick={signIN}>Sign IN</button>
       </div>
     </div>
   );

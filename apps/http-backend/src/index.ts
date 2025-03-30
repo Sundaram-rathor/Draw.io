@@ -1,13 +1,15 @@
-import express, { Request, Response } from "express";
+import express, { request, Request, response, Response } from "express";
 import jwt from "jsonwebtoken";
 import { JWT_SECRET } from "@repo/backend-common/config";
 import { UserMiddleware } from "./middleware/UserMiddleware";
 import { RoomTypes, UserTypes } from "@repo/common/types";
 import { prismaClient } from "@repo/DB/prismaDB";
 import bcrypt from 'bcrypt'
+import cors from 'cors'
 
 const app = express();
 app.use(express.json());
+app.use(cors())
 
 app.get("/", (req: Request, res: Response): void => {
     res.json({ message: "Home route" });
@@ -28,9 +30,15 @@ app.post("/signup", async (req: Request, res: Response): Promise<void> => {
                 password: hashedPass,
             },
         });
-        res.json({ message: "User created" });
+        res.json({ 
+            message: "User created",
+            success:true
+        });
     } catch (error) {
-        res.status(409).json({ message: "Username taken" });
+        res.status(409).json({ 
+            message: "Username taken",
+            success:false
+         });
     }
 });
 
@@ -48,7 +56,8 @@ app.post("/signin", async (req: Request, res: Response)=> {
     })
     if(!user){
         res.json({
-            message:'user not found'
+            message:'user not found',
+            success:false
         })
         return;
     }
@@ -66,7 +75,7 @@ app.post("/signin", async (req: Request, res: Response)=> {
 
     const userId = user?.id;
     const token = jwt.sign({ userId }, JWT_SECRET);
-    res.json({ message: "User signed in", token });
+    res.json({ message: "User signed in", token, success:true });
 });
 
 app.post("/create-room", UserMiddleware, async (req: Request, res: Response): Promise<void> => {
@@ -85,7 +94,8 @@ app.post("/create-room", UserMiddleware, async (req: Request, res: Response): Pr
 
     if(!parsedData.data?.roomId){
         res.json({
-            message:'room id is required'
+            message:'room id is required',
+            success:false
         })
         return;
     }
@@ -103,28 +113,70 @@ app.post("/create-room", UserMiddleware, async (req: Request, res: Response): Pr
         
     
         res.json({ 
-            message: `room with rooom id ${room.id} is created`
+            message: `room with rooom id ${room.id} is created`,
+            success:true
         });
     } catch (error) {
         console.log('room with this id already exists')
 
         res.json({
             message:'room with this id already exists',
-            error
+            error,
+            success:false
         })
     }
     
 });
 
-app.get('/chat/:roomId', UserMiddleware, async(req,res)=>{
+app.get('/rooms',UserMiddleware, async (req: Request, res:Response)=>{
+    
+
+    try {
+        const rooms = await prismaClient.room.findMany({
+            where:{
+                //@ts-ignore
+                adminId:req.userId
+            }
+        })
+
+        res.json({
+            success:true,
+            message:'rooms retrived',
+            rooms
+        })
+        return;
+    } catch (error) {
+        console.log(error)
+        res.json({
+            message:'error in rooms data',
+            success:false
+        })
+    }
+
+
+})
+
+app.get('/room/:slug', UserMiddleware, async(req,res)=>{
 
     //getting room id from params
-    const roomId = Number(req.params.roomId);
+    const slug = req.params.slug;
 
     //retriving messages from respective room id
+    const room = await prismaClient.room.findFirst({
+        where:{
+            slug:slug
+        }
+    })
+    if(!room){
+        res.json({
+            message:'no room found',
+            success:false
+        })
+        return;
+    }
     const message = await prismaClient.chat.findMany({
         where:{
-            roomId:roomId
+            roomId:room.id
         },
         orderBy:{
             id:'desc'
@@ -132,17 +184,24 @@ app.get('/chat/:roomId', UserMiddleware, async(req,res)=>{
         take:50
     })
 
+    
+
     if(message == null){
         res.json({
-            message:'no messages in this room'
+            message:'no messages in this room',
+            success:false
         })
         return;
     }
 
 
+
+
     res.json({
         message:'messages retrived',
-        data:message
+        data:message,
+        success:true,
+        adminId:room.adminId
     })
 })
 
