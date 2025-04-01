@@ -7,7 +7,9 @@
     interface users {
         
             userId:String
-            socket:WebSocket
+            socket?:WebSocket
+            shapeSocket?:WebSocket
+            type?: 'chat' | 'shape'
             rooms:string[]
         
     }
@@ -73,11 +75,7 @@
         }
         
 
-        users.push({
-            userId:userId,
-            socket,
-            rooms:[]
-        })
+        
         
         console.log('user connected')
 
@@ -87,6 +85,8 @@
             //parsing the string data to json data
             const parsedData = JSON.parse(data as unknown as string);
 
+
+
             const room = await prismaClient.room.findFirst({
                 where:{
                     slug:parsedData.slug
@@ -95,6 +95,27 @@
             if(!room){
                 socket.send('no room with this slug')
                 return; 
+            }else{
+                console.log(room)
+            }
+
+
+            if(parsedData.type == 'join_room' || parsedData.type == 'leave_room' || parsedData.type == 'chat'){
+                users.push({
+                    userId:userId,
+                    socket,
+                    rooms:[],
+                    type:'chat'
+                })
+            }
+
+            // inserting shape socket based on userId
+            if(parsedData.type == 'shape'){
+                users.forEach((u) => {
+                    if(u.userId == userId){
+                        u.shapeSocket = socket
+                    }
+                })
             }
 
 
@@ -135,7 +156,8 @@
 
                 users.forEach((user)=>{
                     if(user.rooms.includes(room.slug)){
-                        user.socket.send(JSON.stringify({
+                        
+                        user.socket?.send(JSON.stringify({
                             type:'chat',
                             slug:room.slug,
                             message,
@@ -143,6 +165,33 @@
                         }))
                     }
                 })
+            }
+
+            if(parsedData.type == 'shape'){
+                const type = parsedData.data.type
+                const properties = parsedData.data.properties
+
+                const shape = await prismaClient.shape.create({
+                    data:{
+                        type,
+                        properties,
+                        roomId:room.id,
+                        userId
+
+                    }
+                })
+
+                users.forEach((user)=>{
+                    
+                    if(user.rooms.includes(room.slug) && user.shapeSocket != socket ){
+                        user.socket?.send(JSON.stringify({
+                            shape
+                        }))
+                    }
+                    
+                })
+
+
             }
 
 

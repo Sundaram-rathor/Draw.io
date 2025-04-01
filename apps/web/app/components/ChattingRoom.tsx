@@ -6,13 +6,14 @@ import { useEffect, useState, useRef } from "react"
 import axios from "axios"
 import { BACKEND_URL, WS_URL } from "@repo/backend-common/config"
 
+
+
 export default function Page({ slug }: { slug: string }) {
     const [message, setMessage] = useState('');
     const [oldMessages, setOldMessages] = useState<any[]>([]);
     const [socket, setSocket] = useState<WebSocket | null>(null);
     const messagesEndRef = useRef<HTMLDivElement | null>(null);
     const [roomOwner,setRoomOwner] = useState('')
-
     // Scroll to latest message
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -59,14 +60,17 @@ export default function Page({ slug }: { slug: string }) {
             }
         };
 
-        const ws = new WebSocket(`${WS_URL}?token=${localStorage.getItem('token')}`);
+        const ws1 = new WebSocket(`${WS_URL}?token=${localStorage.getItem('token')}`);
+        
 
-        ws.onopen = () => {
+        ws1.onopen = () => {
             console.log('WebSocket connected');
-            ws.send(JSON.stringify({ type: "join_room", slug: slug }));
+            ws1.send(JSON.stringify({ type: "join_room", slug: slug }));
         };
 
-        ws.onmessage = (event) => {
+        
+
+        ws1.onmessage = (event) => {
             console.log('New message:', event.data);
             try {
                 const newMessage = JSON.parse(event.data);
@@ -77,20 +81,24 @@ export default function Page({ slug }: { slug: string }) {
             }
         };
 
-        ws.onerror = (error) => {
+        ws1.onerror = (error) => {
             console.error('WebSocket error:', error);
         };
+        ;
 
-        ws.onclose = () => {
+        ws1.onclose = () => {
             console.log('WebSocket disconnected');
         };
-
-        setSocket(ws);
+       
+        setSocket(ws1);
+        
         fetchMessages();
 
         return () => {
-            ws.send(JSON.stringify({ type: "leave_room", slug: slug }));
-            ws.close();
+            ws1.send(JSON.stringify({ type: "leave_room", slug: slug }));
+            ws1.close();
+
+           
         };
     }, [slug]);
 

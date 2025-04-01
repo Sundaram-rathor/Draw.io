@@ -128,6 +128,7 @@ app.post("/create-room", UserMiddleware, async (req: Request, res: Response): Pr
     
 });
 
+
 app.get('/rooms',UserMiddleware, async (req: Request, res:Response)=>{
     
 
@@ -203,6 +204,52 @@ app.get('/room/:slug', UserMiddleware, async(req,res)=>{
         success:true,
         adminId:room.adminId
     })
+})
+
+app.get('/shapes/:slug', UserMiddleware, async (req,res)=>{
+
+    const slug = req.params.slug
+    console.log(slug)
+    const room = await prismaClient.room.findFirst({
+        where:{
+            slug
+        }
+    })
+    console.log(room)
+
+    if(!room){
+        res.json({
+            message:'no room with this slug',
+            success:false
+        })
+
+         return;
+    }
+
+    const shapes = await prismaClient.shape.findMany({
+        where:{
+            roomId : room.id
+        }
+    })
+    console.log(shapes)
+
+    if(shapes == null){
+        res.json({
+            message:"no shapes",
+            success:false
+        })  
+    }else{
+        res.json({
+            message:'shapes retrived',
+            shapes,
+            success:true,
+            adminId:room.adminId
+        })
+    }
+
+
+
+
 })
 
 app.listen(8000, () => {
