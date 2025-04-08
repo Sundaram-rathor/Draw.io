@@ -1,15 +1,27 @@
 "use client"
 import { use, useEffect, useRef, useState } from 'react'
 import {Draw} from "../../../utils/draw";
-import {BACKEND_URL, WS_URL} from '@repo/backend-common/config'
+import {BACKEND_URL} from '@repo/backend-common/config'
 import axios from 'axios';
+import { IconBtn } from '../../components/IconBtn';
+import { Circle, PenLine, RectangleHorizontal } from 'lucide-react';
 
 export default function({params}:{params:Promise<{slug:string}>}){
     const canvasRef = useRef<HTMLCanvasElement>(null)
     const [shapes, setShapes] = useState([])
+    const [browserHeight, setBrowserHeight] = useState<number>()
+    const [browserWidth, setBrowserWidth] = useState<number>()
+    const [activated, setActivated] = useState<string>('rect')
+
+
     const {slug} = use(params)
 
+   window.addEventListener('resize', ()=>{
+            setBrowserHeight(window.innerHeight)
+            setBrowserWidth(window.innerWidth)
+        })
     useEffect(()=>{
+        
 
         if (!slug) {
             console.warn("Slug is undefined, skipping API call.");
@@ -38,8 +50,9 @@ export default function({params}:{params:Promise<{slug:string}>}){
 
                 console.log('hi')
                 if(response.data.success){
-                    console.log(response.data)
+                    console.log(response.data.shapes)
                     setShapes(response.data.shapes)
+                    
                 }else{
                     console.log('not able to fetch data', response.data)
                 }
@@ -54,7 +67,7 @@ export default function({params}:{params:Promise<{slug:string}>}){
             fetchingShapes();
         
 
-    },[slug])
+    },[slug,browserWidth,activated])
 
     useEffect(()=>{
         
@@ -63,15 +76,42 @@ export default function({params}:{params:Promise<{slug:string}>}){
             const canvas = canvasRef.current;
 
 
-            Draw(canvas,shapes,slug);
+            Draw(canvas,shapes,slug, activated);
         }
-    },[canvasRef])
+    },[shapes,activated])
+
+    useEffect(()=>{
+        console.log(shapes)
+        console.log(browserHeight)
+        console.log(browserWidth)
+    },[shapes,browserHeight, browserWidth])
 
     console.log("Component Rendered");
 
 
 
     return <div>
-        <canvas ref={canvasRef} width={1980} height={720}></canvas>
+         <canvas ref={canvasRef} width={browserWidth || window.innerWidth} height={browserHeight || window.innerHeight}></canvas> 
+        {/* <div>{browserWidth} {browserHeight}hi there</div> */}
+        <TopBar activated={activated} setActivated={setActivated}/>
+    </div>
+}
+
+
+
+function TopBar({activated, setActivated}:{activated:string, setActivated:any}){
+  return  <div style={{
+    position:'fixed',
+    top:10,
+    left:10,
+    display:'flex'
+  }} >
+        <div style={{
+            display:'flex'
+        }}>
+                <IconBtn Icon={<Circle/>} OnClick={()=> setActivated('circle')} activated={activated == 'circle'}/>
+                <IconBtn Icon={<RectangleHorizontal/>} OnClick={()=> setActivated('rect')} activated={activated == 'rect'}/>
+                <IconBtn Icon={<PenLine/>} OnClick={()=> setActivated('line')} activated={activated == 'line'}/>
+        </div>
     </div>
 }
