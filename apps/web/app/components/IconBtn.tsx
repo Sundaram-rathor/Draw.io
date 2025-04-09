@@ -2,7 +2,7 @@ import { ReactNode } from "react"
 
 interface iconProp {
     Icon: ReactNode,
-    activated: boolean,
+    activated?: boolean,
     OnClick: ()=>void
 }
 

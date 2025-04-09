@@ -209,13 +209,13 @@ app.get('/room/:slug', UserMiddleware, async(req,res)=>{
 app.get('/shapes/:slug', UserMiddleware, async (req,res)=>{
 
     const slug = req.params.slug
-    console.log(slug)
+
     const room = await prismaClient.room.findFirst({
         where:{
             slug
         }
     })
-    console.log(room)
+    
 
     if(!room){
         res.json({
@@ -231,7 +231,7 @@ app.get('/shapes/:slug', UserMiddleware, async (req,res)=>{
             roomId : room.id
         }
     })
-    console.log(shapes)
+    
 
     if(shapes == null){
         res.json({
