@@ -32,6 +32,11 @@ function clearCanvas(existingShapes: any, canvas: HTMLCanvasElement) {
                 2 * Math.PI
             );
             ctx.stroke();
+        }else if(shape.type === "line"){
+            ctx.beginPath();
+            ctx.moveTo(shape.properties.startX,shape.properties.startY)
+            ctx.lineTo(shape.properties.endX, shape.properties.endY)
+            ctx.stroke();
         }
     });
 }
@@ -97,6 +102,11 @@ export function Draw(canvas: HTMLCanvasElement, shapes: any[], slug: string, act
             ctx.beginPath();
             ctx.ellipse(startX + radiusX, startY + radiusY, Math.abs(radiusX), Math.abs(radiusY), 0, 0, 2 * Math.PI);
             ctx.stroke();
+        }else if(activated === 'line'){
+            ctx.beginPath();
+            ctx.moveTo(startX,startY);
+            ctx.lineTo(currentX,currentY);
+            ctx.stroke();
         }
     }
 
@@ -134,6 +144,17 @@ export function Draw(canvas: HTMLCanvasElement, shapes: any[], slug: string, act
                 },
                 userId: "me",
             };
+        }else if(activated === 'line'){
+            newShape = {
+                type: 'line',
+                properties: {
+                    startX,
+                    startY,
+                    endX,
+                    endY
+                },
+                userId: 'me'
+            }
         }
 
         existingShapes.push(newShape);
