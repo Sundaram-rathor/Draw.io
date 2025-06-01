@@ -1,4 +1,5 @@
 import { WS_URL } from "@repo/backend-common/config";
+// i want to dynamically write the text in the canvas
 
 let sock: WebSocket | null = null;
 let existingShapes: any[] = [];
@@ -37,6 +38,30 @@ function clearCanvas(existingShapes: any, canvas: HTMLCanvasElement) {
             ctx.moveTo(shape.properties.startX,shape.properties.startY)
             ctx.lineTo(shape.properties.endX, shape.properties.endY)
             ctx.stroke();
+        }else if(shape.type === "diamond"){
+            ctx.beginPath();
+            ctx.moveTo(shape.properties.x + shape.properties.width / 2, shape.properties.y);
+            ctx.lineTo(shape.properties.x + shape.properties.width, shape.properties.y + shape.properties.height / 2);
+            ctx.lineTo(shape.properties.x + shape.properties.width / 2, shape.properties.y + shape.properties.height);
+            ctx.lineTo(shape.properties.x, shape.properties.y + shape.properties.height / 2);
+            ctx.lineTo(shape.properties.x + shape.properties.width / 2, shape.properties.y );
+
+            ctx.closePath();
+            ctx.stroke();
+        }else if(shape.type === "arrow"){
+            ctx.beginPath();
+            ctx.moveTo(shape.properties.startX, shape.properties.startY);
+            ctx.lineTo(shape.properties.endX, shape.properties.endY);
+            const headlen = 10; // length of head in pixels
+            const angle = Math.atan2(shape.properties.endY - shape.properties.startY, shape.properties.endX - shape.properties.startX);
+            ctx.lineTo(shape.properties.endX - headlen * Math.cos(angle - Math.PI / 6), shape.properties.endY - headlen * Math.sin(angle - Math.PI / 6));
+            ctx.moveTo(shape.properties.endX, shape.properties.endY);
+            ctx.lineTo(shape.properties.endX - headlen * Math.cos(angle + Math.PI / 6), shape.properties.endY - headlen * Math.sin(angle + Math.PI / 6));
+            ctx.stroke();
+        }else if(shape.type === "text"){    
+            ctx.font = "20px Arial";
+            ctx.fillStyle = "rgba(255,255,255)";
+            ctx.fillText(shape.properties.text, shape.properties.x, shape.properties.y);
         }
     });
 }
@@ -81,6 +106,7 @@ export function Draw(canvas: HTMLCanvasElement, shapes: any[], slug: string, act
 
     // Cleanup previous listeners
     canvas.removeEventListener("mousedown", (canvas as any)._mouseDownHandler);
+    canvas.removeEventListener("mousemove", (canvas as any)._mouseMoveHandler);
     canvas.removeEventListener("mouseup", (canvas as any)._mouseUpHandler);
 
     function handleMouseMove(e: MouseEvent) {
@@ -107,6 +133,28 @@ export function Draw(canvas: HTMLCanvasElement, shapes: any[], slug: string, act
             ctx.moveTo(startX,startY);
             ctx.lineTo(currentX,currentY);
             ctx.stroke();
+        }else if(activated === 'diamond'){
+            ctx.beginPath();
+            ctx.moveTo(startX + width / 2, startY);
+            ctx.lineTo(startX + width, startY + height / 2);
+            ctx.lineTo(startX + width / 2, startY + height);
+            ctx.lineTo(startX, startY + height / 2);
+            ctx.closePath();
+            ctx.stroke();
+        }else if(activated === 'arrow'){
+            ctx.beginPath();
+            ctx.moveTo(startX, startY);
+            ctx.lineTo(currentX, currentY);
+            const headlen = 10; // length of head in pixels
+            const angle = Math.atan2(currentY - startY, currentX - startX);
+            ctx.lineTo(currentX - headlen * Math.cos(angle - Math.PI / 6), currentY - headlen * Math.sin(angle - Math.PI / 6));
+            ctx.moveTo(currentX, currentY);
+            ctx.lineTo(currentX - headlen * Math.cos(angle + Math.PI / 6), currentY - headlen * Math.sin(angle + Math.PI / 6));
+            ctx.stroke();
+        }else if(activated === 'text'){
+            ctx.font = "20px Arial";
+            ctx.fillStyle = "rgba(255,255,255, 1)";
+            ctx.fillText("Type here...", startX, startY);
         }
     }
 
@@ -155,6 +203,38 @@ export function Draw(canvas: HTMLCanvasElement, shapes: any[], slug: string, act
                 },
                 userId: 'me'
             }
+        }else if(activated === 'diamond'){
+            newShape = {
+                type: 'diamond',
+                properties: {
+                    x: startX,
+                    y: startY,
+                    width,
+                    height
+                },
+                userId: 'me'
+            };
+        }else if(activated === 'arrow'){
+            newShape = {
+                type: 'arrow',
+                properties: {
+                    startX,
+                    startY,
+                    endX,
+                    endY
+                },
+                userId: 'me'
+            };
+        }else if(activated === 'text'){
+            newShape = {
+                type: 'text',
+                properties: {
+                    x: startX,
+                    y: startY,
+                    text: "Type here..."
+                },
+                userId: 'me'
+            };
         }
 
         existingShapes.push(newShape);

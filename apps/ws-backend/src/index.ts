@@ -166,7 +166,7 @@
                     }
                 })
             }
-
+            console.log('parsed data', parsedData)
             if(parsedData.type == 'shape'){
                 const type = parsedData.data.type
                 const properties = parsedData.data.properties
